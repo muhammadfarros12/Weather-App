@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const WeatherApp());
@@ -14,18 +17,52 @@ class WeatherApp extends StatefulWidget {
 class _WeatherAppState extends State<WeatherApp> {
   int temperature = 0;
   String location = 'San Fransisco';
+  int woeid = 1047378;
+  String weather = 'clear';
+
+  //1v
+  String searchApiUrl = 'https://www.metaweather.com/api/location/search/?query=';
+  //2v
+  String locationApiUrl = 'https://www.metaweather.com/api/location/';
+  //1f
+  void fetchSearch(String input) async{
+    var searchResult = await http.get(Uri.parse(searchApiUrl + input));
+    var result = json.decode(searchResult.body)[0];
+
+    setState(() {
+      location = result['title'];
+      woeid = result['woeid'];
+    });
+  }
+  //2f
+  void fetchLocation() async {
+    var locationResult = await http.get(Uri.parse(locationApiUrl + woeid.toString()));
+    var result = json.decode(locationResult.body);
+    var consolidated_weather = result['consolidated_weather'];
+    var data = consolidated_weather[0];
+
+    setState(() {
+      temperature = data['the_temp'].round();
+      weather = data['weather_state_name'].replaceAll(' ', '').toLowerCase();
+    });
+  }
+
+  //3
+  void onTextFieldSubmitted(String input){
+    fetchSearch(input);
+    fetchLocation();
+  }
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
       home: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           image: DecorationImage(
-              image: AssetImage('images/clear.png'), fit: BoxFit.cover),
+              image: AssetImage('images/$weather.png'),
+              fit: BoxFit.cover
+          ),
         ),
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -59,16 +96,19 @@ class _WeatherAppState extends State<WeatherApp> {
                 children: [
                   Container(
                     width: 300,
-                    child: const TextField(
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 25
-                      ),
-                      decoration: InputDecoration(
+                    child: TextField(
+                      onSubmitted: (String input){
+                        onTextFieldSubmitted(input);
+                      },
+                      style: const TextStyle(color: Colors.white, fontSize: 25),
+                      decoration: const InputDecoration(
                           hintText: 'Search The Another Location...',
-                          hintStyle: TextStyle(color: Colors.white, fontSize: 16),
-                          prefixIcon: Icon(Icons.search, color: Colors.white,)
-                      ),
+                          hintStyle:
+                              TextStyle(color: Colors.white, fontSize: 16),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Colors.white,
+                          )),
                     ),
                   )
                 ],
