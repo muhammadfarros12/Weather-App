@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -113,7 +114,10 @@ class _WeatherAppState extends State<WeatherApp> {
       home: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-              image: AssetImage('images/$weather.png'), fit: BoxFit.cover),
+              image: AssetImage('images/$weather.png'),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.6), BlendMode.dstATop)),
         ),
         child: temperature == null
             ? const Center(
